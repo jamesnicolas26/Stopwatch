@@ -1,28 +1,55 @@
-import time
-import threading
+import tkinter as tk
 
-def stopwatch():
-    """A simple command-line stopwatch."""
-    def timer():
-        """Run the stopwatch timer."""
-        start_time = time.time()
-        while running:
-            elapsed_time = time.time() - start_time
-            print(f"\rElapsed time: {elapsed_time:.2f} seconds", end="")
-            time.sleep(0.1)
+class Stopwatch:
+    """A simple stopwatch application."""
 
-    global running
-    running = True
+    def __init__(self, root):
+        self.root = root
+        self.root.title("Stopwatch")
 
-    # Start the timer thread
-    timer_thread = threading.Thread(target=timer)
-    timer_thread.start()
+        self.time_elapsed = 0
+        self.running = False
 
-    # Wait for user input to stop the stopwatch
-    input("\nPress Enter to stop the stopwatch...")
-    running = False
-    timer_thread.join()
-    print("\nStopwatch stopped.")
+        self.label = tk.Label(root, text="00:00:00", font=("Arial", 24))
+        self.label.pack(pady=20)
+
+        self.start_button = tk.Button(root, text="Start", command=self.start)
+        self.start_button.pack(side=tk.LEFT, padx=20)
+
+        self.stop_button = tk.Button(root, text="Stop", command=self.stop)
+        self.stop_button.pack(side=tk.LEFT, padx=20)
+
+        self.reset_button = tk.Button(root, text="Reset", command=self.reset)
+        self.reset_button.pack(side=tk.LEFT, padx=20)
+
+    def start(self):
+        """Start the stopwatch."""
+        if not self.running:
+            self.running = True
+            self.update_time()
+
+    def stop(self):
+        """Stop the stopwatch."""
+        self.running = False
+
+    def reset(self):
+        """Reset the stopwatch."""
+        self.time_elapsed = 0
+        self.label.config(text="00:00:00")
+
+    def update_time(self):
+        """Update the time display."""
+        if self.running:
+            self.time_elapsed += 1
+            minutes, seconds = divmod(self.time_elapsed, 60)
+            hours, minutes = divmod(minutes, 60)
+            self.label.config(text=f"{hours:02}:{minutes:02}:{seconds:02}")
+            self.root.after(1000, self.update_time)
+
+def main():
+    root = tk.Tk()
+    stopwatch = Stopwatch(root)
+    root.mainloop()
 
 if __name__ == "__main__":
-    stopwatch()
+    main()

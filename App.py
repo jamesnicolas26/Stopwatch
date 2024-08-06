@@ -1,55 +1,78 @@
 import tkinter as tk
+import time
 
-class Stopwatch:
-    """A simple stopwatch application."""
+running = False
+start_time = None
 
-    def __init__(self, root):
-        self.root = root
-        self.root.title("Stopwatch")
+def update_time():
+    """Update the stopwatch display every second."""
+    if running:
+        elapsed = time.time() - start_time
+        minutes, seconds = divmod(elapsed, 60)
+        label_time.config(text=f"{int(minutes):02}:{int(seconds):02}")
+        root.after(1000, update_time)
 
-        self.time_elapsed = 0
-        self.running = False
+def start():
+    """Start the stopwatch."""
+    global running, start_time
+    if not running:
+        running = True
+        start_time = time.time() - sum_lap_times()
+        update_time()
 
-        self.label = tk.Label(root, text="00:00:00", font=("Arial", 24))
-        self.label.pack(pady=20)
+def stop():
+    """Stop the stopwatch."""
+    global running
+    running = False
 
-        self.start_button = tk.Button(root, text="Start", command=self.start)
-        self.start_button.pack(side=tk.LEFT, padx=20)
+def reset():
+    """Reset the stopwatch and lap times."""
+    global start_time
+    start_time = None
+    label_time.config(text="00:00")
+    listbox_laps.delete(0, tk.END)
+    stop()
 
-        self.stop_button = tk.Button(root, text="Stop", command=self.stop)
-        self.stop_button.pack(side=tk.LEFT, padx=20)
+def lap():
+    """Record a lap time."""
+    if running:
+        elapsed = time.time() - start_time
+        minutes, seconds = divmod(elapsed, 60)
+        listbox_laps.insert(tk.END, f"{int(minutes):02}:{int(seconds):02}")
 
-        self.reset_button = tk.Button(root, text="Reset", command=self.reset)
-        self.reset_button.pack(side=tk.LEFT, padx=20)
+def sum_lap_times():
+    """Calculate the total lap time."""
+    total = 0
+    for lap_time in listbox_laps.get(0, tk.END):
+        minutes, seconds = map(int, lap_time.split(":"))
+        total += minutes * 60 + seconds
+    return total
 
-    def start(self):
-        """Start the stopwatch."""
-        if not self.running:
-            self.running = True
-            self.update_time()
+# Create the main window
+root = tk.Tk()
+root.title("Stopwatch with Lap Times")
 
-    def stop(self):
-        """Stop the stopwatch."""
-        self.running = False
+# Create and place widgets
+label_time = tk.Label(root, text="00:00", font=("Arial", 48))
+label_time.pack()
 
-    def reset(self):
-        """Reset the stopwatch."""
-        self.time_elapsed = 0
-        self.label.config(text="00:00:00")
+frame_buttons = tk.Frame(root)
+frame_buttons.pack()
 
-    def update_time(self):
-        """Update the time display."""
-        if self.running:
-            self.time_elapsed += 1
-            minutes, seconds = divmod(self.time_elapsed, 60)
-            hours, minutes = divmod(minutes, 60)
-            self.label.config(text=f"{hours:02}:{minutes:02}:{seconds:02}")
-            self.root.after(1000, self.update_time)
+button_start = tk.Button(frame_buttons, text="Start", command=start)
+button_start.pack(side=tk.LEFT)
 
-def main():
-    root = tk.Tk()
-    stopwatch = Stopwatch(root)
-    root.mainloop()
+button_stop = tk.Button(frame_buttons, text="Stop", command=stop)
+button_stop.pack(side=tk.LEFT)
 
-if __name__ == "__main__":
-    main()
+button_reset = tk.Button(frame_buttons, text="Reset", command=reset)
+button_reset.pack(side=tk.LEFT)
+
+button_lap = tk.Button(frame_buttons, text="Lap", command=lap)
+button_lap.pack(side=tk.LEFT)
+
+listbox_laps = tk.Listbox(root, width=20, height=10)
+listbox_laps.pack()
+
+# Start the main loop
+root.mainloop()
